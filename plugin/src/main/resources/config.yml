@@ -1,0 +1,28 @@
+# config.yml
+
+# DATABASE CONFIGS
+# mysql is the default, but you can also choose mariadb.
+database-type: mysql
+
+# Database name
+database-name: ticket
+
+# This is the hosting ip address for the database
+database-host: localhost
+
+# The port of the database
+database-port: 3306
+
+# The username to connect to the database with
+database-username: root
+
+# The password to connect to the database
+database-password: root
+
+# Command cooldown time (in seconds)
+command-cooldown: 0
+
+# DISCORD CONFIGS
+webhook: https://discord.com/api/webhooks/1225576162122797117/-73cUaCpH48c7U0qDyjZQIFxxNdYXt1Oz_I_R_r_aC9E5r1zwujPXvdOmhoLfH57u-AC
+
+# MESSAGE CONFIGS

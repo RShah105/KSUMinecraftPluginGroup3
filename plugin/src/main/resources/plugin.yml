@@ -4,5 +4,6 @@ main: org.incendo.cloudpaper.Plugin
 api-version: '1.20'
 commands:
   ticket:
+    aliases: [tkt]
     description: Manage tickets
-    usage: /ticket create <type> <description> OR /ticket list
+    usage: /ticket
