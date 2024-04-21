@@ -1,55 +1,53 @@
 package org.incendo.cloudpaper;
 
 import org.bukkit.configuration.file.FileConfiguration;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONArray;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import static org.incendo.cloudpaper.Plugin.LOGGER;
+
 public class DiscordManager {
 
-//    private final String webhookUrl;
-//    private final FileConfiguration config;
-    public static void main(String[] args) {
-        PostTicketToDiscord("Create", "1", "d783e971-e1c8-4c34-bdc7-1146b798ac38", "Reeceboy1299", "This is a testing message", "320948203984231123");
-    }
-//    public DiscordManager(String webhookUrl, FileConfiguration config) {
-//        this.config = config;
-//        this.webhookUrl = this.config.getString("webhook");
-//    }
+    private final String webhookUrl;
+    private final FileConfiguration config;
 
-    public static void PostTicketToDiscord(String event, String id, String userId, String username, String message, String discordId) {
-        try {
-            URL url = new URL("http://localhost:5000/webhook");
-            HttpURLConnection con = (HttpURLConnection)url.openConnection();
-            con.setRequestMethod("POST");
-            con.setRequestProperty("Content-Type", "application/json");
-            con.setRequestProperty("Accept", "application/json");
-            con.setDoOutput(true);
-            String jsonInputString =
-                    "{\"event\": \"" + event + "\", " +
-                    "\"id\": \"" + id + "\", " +
-                    "\"user-uuid\": \"" + userId + "\", " +
-                    "\"username\": \"" + username + "\", " +
-                    "\"message\": \"" + message + "\", " +
-                    "\"discord-id\": \"" + discordId + "\"}";
-            try(OutputStream os = con.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes("utf-8");
-                os.write(input, 0, input.length);
-            }
-            try(BufferedReader br = new BufferedReader(
-                    new InputStreamReader(con.getInputStream(), "utf-8"))) {
-                StringBuilder response = new StringBuilder();
-                String responseLine = null;
-                while ((responseLine = br.readLine()) != null) {
-                    response.append(responseLine.trim());
-                }
-                System.out.println(response.toString());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public DiscordManager(FileConfiguration config) {
+        this.config = config;
+        this.webhookUrl = this.config.getString("webhook");
+    }
+
+    public void PostTicketToDiscord(String event, String id, String userId, String message, String discordId) {
+       try {
+           URL url = new URL(webhookUrl);
+           HttpURLConnection http = (HttpURLConnection) url.openConnection();
+           http.addRequestProperty("Content-Type", "application/json");
+           http.addRequestProperty("User-Agent", "Java-DiscordWebhook-BY-Gelox_");
+           http.setDoOutput(true);
+           http.setRequestMethod("POST");
+           String jsonInputString =
+                   "{\n\t\"event\": \"" + event + "\", \n" +
+                   "\t\"id\": \"" + id + "\", \n" +
+                   "\t\"user-uuid\": \"" + userId + "\", \n" +
+                   "\t\"message\": \"" + message + "\", \n" +
+                   "\t\"discord-id\": \"" + discordId + "\"\n}";
+           jsonInputString = jsonInputString.replace("\"", "\\\"").replace("\n", "\\n").replace("\t", "\\t");
+           String discordJson = "{\"content\": \"" + jsonInputString + "\", \"username\": \"" + config.getString("discord-webhook-username") + "\"}";
+
+           OutputStream stream = http.getOutputStream();
+           stream.write(discordJson.getBytes("UTF-8"));
+           stream.flush();
+           stream.close();
+
+           http.getInputStream().close(); // You can also check the HTTP response code here
+           http.disconnect();
+
+           LOGGER.info(event + " message sent to Discord successfully!");
+       } catch (Exception e) {
+           LOGGER.severe("Failed to send message to Discord: " + e.getMessage());
+       }
     }
 }

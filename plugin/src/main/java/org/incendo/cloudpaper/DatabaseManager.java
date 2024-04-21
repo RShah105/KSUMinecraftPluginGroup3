@@ -1,10 +1,7 @@
 package org.incendo.cloudpaper;
 
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import okhttp3.*;
 import org.bukkit.configuration.file.FileConfiguration;
 
-import java.io.IOException;
 import java.sql.*;
 import java.sql.Connection;
 import java.util.ArrayList;
@@ -57,11 +54,11 @@ public class DatabaseManager {
             String port = config.getString("database-port");
             String name = config.getString("database-name");
             String url = "jdbc:mysql://" + host + ":" + port + "/" + name;
-             if (databaseType.equalsIgnoreCase("mariadb")) {
+            if (databaseType.equalsIgnoreCase("mariadb")) {
                 url = "jdbc:mariadb://" + host + ":" + port + "/" + name;
             } else if (databaseType.equalsIgnoreCase("sqlite")) {
                  url = "jdbc:sqlite://" + host + ":" + port + "/" + name;
-             }
+            }
             String user = config.getString("database-username"); // Database username
             String password = config.getString("database-password");; // Database password
             connection = DriverManager.getConnection(url, user, password); // Establish connection
@@ -108,111 +105,10 @@ public class DatabaseManager {
         }
     }
 
-    public void createAdminsTable() {
-        try (PreparedStatement statement = connection.prepareStatement(
-                "CREATE TABLE IF NOT EXISTS admins (" +
-                        "ID INT PRIMARY KEY AUTO_INCREMENT NOT NULL," +
-                        "player_uuid VARCHAR(36) NOT NULL," +
-                        "username VARCHAR(45) NOT NULL" +
-                        ")"
-        )) {
-            statement.executeUpdate(); // Execute SQL statement to create the table
-            LOGGER.info("A table called 'admins' was successfully created in the database");
-        } catch (SQLException e) {
-            e.printStackTrace(); // Print stack trace if table creation fails
-        }
-    }
-
-    public void makeAdmin(UUID playerUUID, String username) {
+    public int insertTicket(UUID playerUUID, String username, String description, String status, String world, double x, double y, double z, double pitch, double yaw, long creationTime) {
+        int ticketId = -1;
         try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO admins (player_uuid, username) VALUES (?,?)")){
-            preparedStatement.setString(1, playerUUID.toString()); // Set player UUID
-            preparedStatement.setString(2, username); // Set player UUID
-            preparedStatement.executeUpdate(); // Execute SQL statement to insert the ticket
-            LOGGER.info("A player was successfully inserted into the admins table.");
-        } catch(SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket insertion fails
-        }
-    }
-
-    public void removeAdmin(UUID playerUUID) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "DELETE FROM admins WHERE player_uuid = ?")){
-            preparedStatement.setString(1, playerUUID.toString()); // Set player UUID
-            preparedStatement.executeUpdate(); // Execute SQL statement to insert the ticket
-            LOGGER.info("A player was successfully removed from the admins table.");
-        } catch(SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket insertion fails
-        }
-    }
-
-    public void removeAdmin(String username) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "DELETE FROM admins WHERE username = ?")){
-            preparedStatement.setString(1, username); // Set player UUID
-            preparedStatement.executeUpdate(); // Execute SQL statement to insert the ticket
-            LOGGER.info("A player was successfully removed from the admins table.");
-        } catch(SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket insertion fails
-        }
-    }
-
-    public boolean adminExists(String username) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT COUNT(*) FROM admins WHERE username = ?")) {
-            preparedStatement.setString(1, username); // Set ticket ID in the SQL query
-            ResultSet resultSet = preparedStatement.executeQuery(); // Execute SQL query
-
-            if (resultSet.next()) {
-                int count = resultSet.getInt(1); // Get the count of rows
-                return count > 0; // Return true if count is greater than 0, indicating the ticket exists
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket retrieval fails
-        }
-        return false; // Return false if an error occurs or the ticket doesn't exist
-    }
-
-    public boolean adminExists(UUID playerUUID) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT COUNT(*) FROM admins WHERE player_uuid = ?")) {
-            preparedStatement.setString(1, playerUUID.toString()); // Set ticket ID in the SQL query
-            ResultSet resultSet = preparedStatement.executeQuery(); // Execute SQL query
-
-            if (resultSet.next()) {
-                int count = resultSet.getInt(1); // Get the count of rows
-                return count > 0; // Return true if count is greater than 0, indicating the ticket exists
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket retrieval fails
-        }
-        return false; // Return false if an error occurs or the ticket doesn't exist
-    }
-
-    public List<HashMap<String, String>> getAdmins() {
-        List<HashMap<String, String>> admins = new ArrayList<>();
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "SELECT * FROM admins")) {
-            ResultSet resultSet = preparedStatement.executeQuery(); // Execute SQL query
-            while (resultSet.next()) { // Iterate through query results
-                HashMap<String, String> admin = new HashMap<>();
-                int id = resultSet.getInt("ID");
-                String player_uuid = resultSet.getString("player_uuid");
-                String username = resultSet.getString("username");
-                admin.put("ID", String.valueOf(id));
-                admin.put("player_uuid", player_uuid);
-                admin.put("username", username);
-                admins.add(admin);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Print stack trace if ticket retrieval fails
-        }
-        return admins; // Return the list of tickets
-    }
-
-    public void insertTicket(UUID playerUUID, String username, String description, String status, String world, double x, double y, double z, double pitch, double yaw, long creationTime) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(
-                "INSERT INTO tickets (player_uuid, username, Description, Status, world, x_coord, y_coord, z_coord, pitch, yaw, creation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")){
+                "INSERT INTO tickets (player_uuid, username, Description, Status, world, x_coord, y_coord, z_coord, pitch, yaw, creation_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)){
             preparedStatement.setString(1, playerUUID.toString());
             preparedStatement.setString(2, username);
             preparedStatement.setString(3, description);
@@ -225,10 +121,16 @@ public class DatabaseManager {
             preparedStatement.setDouble(10, yaw);
             preparedStatement.setLong(11, creationTime);
             preparedStatement.executeUpdate(); // Execute SQL statement to insert the ticket
-            LOGGER.info("A ticket was successfully inserted into the database table.");
+            ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                ticketId = generatedKeys.getInt(1);
+            }
+
+            LOGGER.info("A ticket with ID " + ticketId + " was successfully inserted into the database table.");
         } catch(SQLException e) {
             e.printStackTrace(); // Print stack trace if ticket insertion fails
         }
+        return ticketId;
     }
 
 
@@ -275,7 +177,7 @@ public class DatabaseManager {
                 ticketInfo.put("pitch", pitch);
                 ticketInfo.put("yaw", yaw);
             } else {
-                System.out.println("No ticket found with the specified ID and player UUID.");
+                LOGGER.info("No ticket found with the specified ID and player UUID.");
             }
         } catch (SQLException e) {
             e.printStackTrace(); // Print stack trace if an error occurs
@@ -319,7 +221,7 @@ public class DatabaseManager {
                 ticket.put("pitch", pitch);
                 ticket.put("yaw", yaw);
                 ticket.put("creation_time", creation_time);
-                ticket.put("message", createTicketMessage(String.valueOf(id), description, formattedDate, status, username));
+                ticket.put("formattedDate", formattedDate);
                 tickets.add(ticket);
             }
         } catch (SQLException e){
@@ -328,11 +230,8 @@ public class DatabaseManager {
         return tickets;
     }
 
-    public String createTicketMessage(String id, String description, String formattedDate, String status, String username) {
-        String separator = "<black> | </black>";
-        return "<hover:show_text:'<gold>" + description + "</gold>'>" +
-                "<gold> - ID: " + id + "</gold>" + separator + "<gold>" + username + "</gold>" + separator + "<gold>Created: " + formattedDate + "</gold>" + separator + "<gold>" + status + "</gold></hover>";
-    }
+
+
 
     public List<HashMap<String, String>> getAllTickets() {
         List<HashMap<String, String>> tickets = new ArrayList<>();
@@ -368,7 +267,7 @@ public class DatabaseManager {
                 ticket.put("pitch", pitch);
                 ticket.put("yaw", yaw);
                 ticket.put("creation_time", creation_time);
-                ticket.put("message", createTicketMessage(String.valueOf(id), description, formattedDate, status, username));
+                ticket.put("formattedDate", formattedDate);
                 tickets.add(ticket);
             }
         } catch (SQLException e) {

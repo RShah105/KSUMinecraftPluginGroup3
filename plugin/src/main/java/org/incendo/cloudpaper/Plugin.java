@@ -1,6 +1,12 @@
 package org.incendo.cloudpaper;
 
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class Plugin extends JavaPlugin {
@@ -8,21 +14,23 @@ public final class Plugin extends JavaPlugin {
     public static Logger LOGGER;
     private DatabaseManager databaseManager;
     private TicketManager ticketManager;
+    private PermissonsManager permissonsManager;
 
     @Override
     public void onEnable() {
+
         this.saveDefaultConfig();
         LOGGER = this.getLogger();
+        permissonsManager = new PermissonsManager(this);
         databaseManager = new DatabaseManager(this.getConfig());
-        ticketManager = new TicketManager(this, databaseManager, this.getConfig());
+        ticketManager = new TicketManager(this, databaseManager, permissonsManager, this.getConfig());
         setupDatabase();
-        ticketManager.loadPermissions();
         LOGGER.info("Enabled!"); // Log plugin enable status
     }
 
     @Override
     public void onDisable() {
-        ticketManager.unloadPermissions();
+        permissonsManager.save();
         databaseManager.disconnectFromDatabase(); // Disconnect from the database
         getLogger().info("Disabled!"); // Log plugin disable status
     }
@@ -30,6 +38,5 @@ public final class Plugin extends JavaPlugin {
     private void setupDatabase() {
         databaseManager.connectToDatabase();
         databaseManager.createTicketsTable();
-        databaseManager.createAdminsTable();
     }
 }
