@@ -2,27 +2,27 @@
 
 # DATABASE CONFIGS
 # This value can be mariadb, mysql, or sqlite
-database-type: mysql
+database-type: 
 # Database name
-database-name: ticket
+database-name: 
 # This is the hosting ip address for the database
-database-host: localhost
+database-host: 
 # The port of the database
-database-port: 3306
+database-port: 
 # The username to connect to the database with
-database-username: root
+database-username: 
 # The password to connect to the database
-database-password: root
+database-password: 
 # Command cooldown time (in seconds)
 command-cooldown: 0
 
 # DISCORD CONFIGS
 # This is the webhook gotten from the Discord server settings
-webhook: https://discord.com/api/webhooks/1225576162122797117/-73cUaCpH48c7U0qDyjZQIFxxNdYXt1Oz_I_R_r_aC9E5r1zwujPXvdOmhoLfH57u-AC
+webhook: 
 # Currently, this is not being used, this is a random constant
 discord-id: 183290423847323
 # This is the name of the poster being used on the Discord side of the webhook.
-discord-webhook-username: Ticketing Plugin
+discord-webhook-username: 
 
 # MESSAGES
 # HELP MENU MESSAGES
